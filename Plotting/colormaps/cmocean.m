@@ -100,7 +100,9 @@ function cmap = cmocean(ColormapName,varargin)
 % Oceanography 29(3):9?13, http://dx.doi.org/10.5670/oceanog.2016.66.
 % 
 % See also colormap and caxis.  
+
 %% Display colormap options: 
+
 if nargin==0
    figure('menubar','none','numbertitle','off','Name','cmocean options:')
    
@@ -115,23 +117,30 @@ if nargin==0
    return
 end
 %% Error checks: 
+
 assert(isnumeric(ColormapName)==0,'Input error: ColormapName must be a string.') 
+
 %% Set defaults: 
+
 NLevels = 256; 
 autopivot = false; 
 PivotValue = 0; 
 InvertedColormap = false; 
+
 %% Parse inputs: 
+
 % Does user want to flip the colormap direction? 
 dash = regexp(ColormapName,'-'); 
 if any(dash) 
    InvertedColormap = true; 
    ColormapName(dash) = []; 
 end
+
 % Forgive the British: 
 if strncmpi(ColormapName,'grey',4)
    ColormapName = 'gray'; 
 end
+
 % Does the user want a "negative" version of the colormap (with an inverted lightness profile)? 
 tmp = strncmpi(varargin,'negative',3); 
 if any(tmp) 
@@ -140,6 +149,7 @@ if any(tmp)
 else
    negativeColormap = false; 
 end
+
 % Does the user want to center a diverging colormap on a specific value? 
 % This parsing support original 'zero' syntax and current 'pivot' syntax. 
  tmp = strncmpi(varargin,'pivot',3) | strncmpi(varargin,'zero',3); % Thanks to Phelype Oleinik for this suggestion. 
@@ -153,52 +163,76 @@ end
    end
    varargin = varargin(~tmp); 
 end
+
 % Has user requested a specific number of levels? 
 tmp = isscalar(varargin); 
 if any(tmp) 
    NLevels = varargin{tmp}; 
 end
+
+
 %% Load RGB values and interpolate to NLevels: 
+
 cmap = cmoceanRawRGB(ColormapName); % a subfunction provided below with RGB values of all maps. 
+
 if negativeColormap
    
    % Convert RGB to LAB colorspace: 
    LAB = colorspace('RGB->LAB',cmap); 
+
    % Operate on the lightness profile: 
    L = LAB(:,1); 
+
    % Flip the lightness profile and set the lowest point to black:
    L = max(L) - L; 
+
    % Stretch the lightness profile to make the lightest bits 95% white. (Going 100% white
    % would make the ends of a divergent profile impossible to distinguish.)
    L = L*(95/max(L)); 
+
    % Make a new LAB matrix: 
    LAB = [L LAB(:,2:3)]; 
    
    % Convert LAB back to RGB: 
    cmap = colorspace('LAB->RGB',LAB); 
 end
-% Interpolate if necessary: 
-if NLevels~=size(cmap,1)
-   cmap = interp1(1:size(cmap,1), cmap, linspace(1,size(cmap,1),NLevels),'linear');
-end
+
 %% Invert the colormap if requested by user: 
+
 if InvertedColormap
    cmap = flipud(cmap); 
 end
+
 %% Adjust values to current caxis limits? 
+
 if autopivot
    clim = caxis; 
    assert(PivotValue>=clim(1) & PivotValue<=clim(2),'Error: pivot value must be within the current color axis limits.') 
    maxval = max(abs(clim-PivotValue)); 
    cmap = interp1(linspace(-maxval,maxval,size(cmap,1))+PivotValue, cmap, linspace(clim(1),clim(2),size(cmap,1)),'linear');
 end
+
+%% Interpolate if necessary: 
+
+if NLevels~=size(cmap,1)
+   cmap = interp1(1:size(cmap,1), cmap, linspace(1,size(cmap,1),NLevels),'linear');
+end
+
 %% Clean up 
+
 if nargout==0
    colormap(gca,cmap) 
    clear cmap  
 end
+
+
+
 %%  S U B F U N C T I O N S 
+
+
 function RGB = cmoceanRawRGB(cmapName) 
+
+
 switch lower(cmapName(1:3))
    case {'dee'} 
       RGB = [9.928371765383620096e-01 9.943734553013935384e-01 8.001361955494933342e-01
@@ -457,6 +491,7 @@ switch lower(cmapName(1:3))
 1.614878059346168959e-01 1.086331782717616379e-01 1.834416540200605461e-01
 1.587995102818766935e-01 1.056281331759973130e-01 1.780821476813713722e-01
 1.561019746507273376e-01 1.026082525875711138e-01 1.727215696232307918e-01]; 
+
    case 'mat' 
       RGB = [9.942936149611202312e-01 9.303277953232079733e-01 6.910969022498407721e-01
 9.938034737629607429e-01 9.248067799917484288e-01 6.856470896792071779e-01
@@ -714,6 +749,7 @@ switch lower(cmapName(1:3))
 1.950016002461211762e-01 6.199020593164828591e-02 2.499680455203335816e-01
 1.900821894571196047e-01 6.057894133574073109e-02 2.465160535124999996e-01
 1.851717128353368158e-01 5.913348735199071976e-02 2.430426744218359136e-01];
+
    case 'alg'
       RGB = [8.429022637670927631e-01 9.769128443086748659e-01 8.146495714674897304e-01
 8.379898654100343958e-01 9.732407342044756549e-01 8.088430556678033456e-01
@@ -971,6 +1007,7 @@ switch lower(cmapName(1:3))
 7.158041455970551303e-02 1.488655123209624287e-01 8.459734502497687214e-02
 7.022733114464504989e-02 1.454810031009998728e-01 8.182251708486179553e-02
 6.885643403782271132e-02 1.420894601159049808e-01 7.903362825094448207e-02]; 
+
    case 'den' 
       RGB = [9.022021640633741679e-01 9.441797977915000750e-01 9.438027309131502562e-01
 8.954445384876381642e-01 9.409578903665054561e-01 9.410648759794842944e-01
@@ -1228,6 +1265,7 @@ switch lower(cmapName(1:3))
 2.226121431237116921e-01 5.808842465569693386e-02 1.511590815358170026e-01
 2.178074381899826051e-01 5.700049790743180050e-02 1.466558187034970040e-01
 2.129839422000848193e-01 5.589168645699472276e-02 1.422095068240733784e-01]; 
+
    case 'bal' 
       RGB = [9.317630180115785143e-02 1.111733294776027225e-01 2.615123885530547532e-01
 9.697151501690241815e-02 1.168702109792841837e-01 2.730963071061036085e-01
@@ -1485,6 +1523,7 @@ switch lower(cmapName(1:3))
 2.558840557281191197e-01 3.990046570244704105e-02 7.972236454569985031e-02
 2.459622220783502511e-01 3.762595141506584057e-02 7.461913567560218841e-02
 2.360563646646140490e-01 3.529747994604028744e-02 6.943744239412558139e-02]; 
+
    case 'gra'
       RGB = [5.119113838889112324e-07 2.052270195661655352e-06 5.982577941045682640e-06
 2.598440803609315740e-04 2.625944024536107477e-04 2.770622839605119624e-04
@@ -1742,6 +1781,7 @@ switch lower(cmapName(1:3))
 9.888151187175039381e-01 9.880911463320615207e-01 9.827359324769276983e-01
 9.941250223040635214e-01 9.934101568888956679e-01 9.880231373182063459e-01
 9.994561956101176703e-01 9.987503615523224410e-01 9.933314215482736964e-01]; 
+
    case 'oxy' 
       RGB = [2.503217690585841648e-01 2.046237300762866404e-02 1.966891524096342492e-02
 2.555648459031592545e-01 2.111591456205731687e-02 2.090007960568026485e-02
@@ -2063,6 +2103,7 @@ switch lower(cmapName(1:3))
 8.680428176626151515e-01 6.956348241211850469e-01 1.038977462027144416e-01
 8.664728647912948167e-01 6.908014665312249836e-01 1.019343675562955354e-01
 8.648889520799001307e-01 6.859800077414488495e-01 9.998838514326469085e-02];
+
    case 'sol' 
       RGB = [2.014250997833959556e-01 7.730778455372402935e-02 9.342024025258441333e-02
 2.062319592710875060e-01 7.906207768979725548e-02 9.541606071998920413e-02
@@ -2320,6 +2361,7 @@ switch lower(cmapName(1:3))
 8.802811281654138176e-01 9.829160047653974219e-01 2.882122575277183407e-01
 8.804129372223431504e-01 9.884419266545670935e-01 2.909276978215925569e-01
 8.805080058500511786e-01 9.939881188401472611e-01 2.936474048368232226e-01]; 
+
    case 'pha' 
       RGB = [6.583083928922510708e-01 4.699391690315133929e-01 4.941288203988051381e-02
 6.643374189373471017e-01 4.662019008569991407e-01 5.766473450402211792e-02
@@ -2577,6 +2619,7 @@ switch lower(cmapName(1:3))
 6.440757220432393737e-01 4.781157049081125598e-01 5.119960076823739520e-02
 6.512128893528150719e-01 4.740624350126631525e-01 5.044367478760234530e-02
 6.583083928921535932e-01 4.699391690315524728e-01 4.941288204103298082e-02];
+
    case 'hal' 
       RGB = [1.629529545569048110e-01 9.521591660747855124e-02 4.225729247643043585e-01
 1.648101130638113809e-01 9.635115909727909322e-02 4.318459659833655540e-01
@@ -2834,6 +2877,7 @@ switch lower(cmapName(1:3))
 9.808627042040826138e-01 9.317124815536732552e-01 5.875425838151492330e-01
 9.874684104099172854e-01 9.342202886448683907e-01 5.950648878797101249e-01
 9.940805805099582892e-01 9.367275819156850591e-01 6.026699962989522374e-01]; 
+
    case 'spe' 
       RGB = [9.996253193176977137e-01 9.913711226010460953e-01 8.041012438578545307e-01
 9.969312990878144154e-01 9.865865913107011442e-01 7.958196545688069889e-01
@@ -3091,6 +3135,7 @@ switch lower(cmapName(1:3))
 9.241015243151923242e-02 1.447574737795673805e-01 7.947496936453349314e-02
 9.149313879389489590e-02 1.410504572025015335e-01 7.638732537156053826e-02
 9.053276383981978537e-02 1.373386075843833487e-01 7.325761429945673586e-02]; 
+
    case 'the' 
       RGB = [1.555601333154079877e-02 1.382442454646408414e-01 2.018108864558305071e-01
 1.620183633850513089e-02 1.410507428866217272e-01 2.089765125440807836e-01
@@ -3348,6 +3393,7 @@ switch lower(cmapName(1:3))
 9.156931782520092433e-01 9.685354904254356301e-01 3.482056900726151483e-01
 9.124490701578419349e-01 9.753266872784461805e-01 3.518533597970244786e-01
 9.090418416674036495e-01 9.821574063216705897e-01 3.555078064299531104e-01]; 
+
    case 'tur' 
       RGB = [9.128247827303703765e-01 9.639053479101408195e-01 6.723488894068933019e-01
 9.105541439463002984e-01 9.592872094872512134e-01 6.663907644186453094e-01
@@ -3605,6 +3651,7 @@ switch lower(cmapName(1:3))
 1.417824484273444985e-01 1.250035003675231404e-01 1.101417246101454861e-01
 1.378861632611661503e-01 1.223645204774909678e-01 1.081750159008208478e-01
 1.339921324751868759e-01 1.197113766395997425e-01 1.061926684632616136e-01]; 
+
    case 'del'
       RGB = [6.597738601379860013e-02 1.238600499381984077e-01 2.494811599712867811e-01
 6.865757658541371544e-02 1.266324956800233548e-01 2.555762447808356264e-01
@@ -4118,6 +4165,7 @@ switch lower(cmapName(1:3))
 9.241015243151923242e-02 1.447574737795673805e-01 7.947496936453349314e-02
 9.149313879389489590e-02 1.410504572025015335e-01 7.638732537156053826e-02
 9.053276383981978537e-02 1.373386075843833487e-01 7.325761429945673586e-02];
+
    case 'cur'
       RGB = [8.225559928700268419e-02 1.149244079727295142e-01 2.647901677800857390e-01
 8.312616532498406929e-02 1.190383729463048712e-01 2.668628892216621806e-01
@@ -4631,6 +4679,7 @@ switch lower(cmapName(1:3))
 2.131352588343927157e-01 5.385491895770589538e-02 2.173030574920574165e-01
 2.082620235717315138e-01 5.257438772048273617e-02 2.129328977906284059e-01
 2.034002463374002811e-01 5.125715285178860520e-02 2.085372063771265272e-01]; 
+
    case 'amp' 
       RGB = [9.463470914425774483e-01 9.290101343908121478e-01 9.257532417012246384e-01
 9.437115115548888600e-01 9.244624965319422349e-01 9.206701514370421169e-01
@@ -4888,6 +4937,7 @@ switch lower(cmapName(1:3))
 2.459428063629143790e-01 3.762148549775875400e-02 7.460911056507216199e-02
 2.410021600694670640e-01 3.645746689804394564e-02 7.203245689473128377e-02
 2.360563646646140490e-01 3.529747994604028744e-02 6.943744239412558139e-02]; 
+
    case 'tem' 
       RGB = [9.985763296811461798e-01 9.632965417140263442e-01 9.577895036430327247e-01
 9.934918422996558141e-01 9.594375624216472387e-01 9.516983192548315040e-01
@@ -5145,6 +5195,7 @@ switch lower(cmapName(1:3))
 8.400180885962132971e-02 1.231074880892656653e-01 2.689526699064171411e-01
 8.312616532498406929e-02 1.190383729463048712e-01 2.668628892216621806e-01
 8.225559928700268419e-02 1.149244079727295142e-01 2.647901677800857390e-01]; 
+
    case 'ice'
       RGB = [1.531167435543729846e-02 2.252059388699531942e-02 7.272873735907764425e-02
 1.800549591959003243e-02 2.544551608389769570e-02 7.841879116825511975e-02
@@ -5402,6 +5453,7 @@ switch lower(cmapName(1:3))
 9.045013427138774986e-01 9.831399005223971921e-01 9.860005773650694083e-01
 9.113300542301955298e-01 9.874449459956177177e-01 9.894442642623689776e-01
 9.180592960081255249e-01 9.918135358838490179e-01 9.928328638314803944e-01]; 
+
    case 'rai' % rain
       RGB = [9.345899218079473103e-01 9.308468535401923649e-01 9.527121598234155053e-01
 9.317427384147130009e-01 9.265559169859566291e-01 9.461412847112190549e-01
@@ -5659,6 +5711,7 @@ switch lower(cmapName(1:3))
 1.333340174081290574e-01 1.122121767595207487e-01 2.266630565550546428e-01
 1.324249399956005380e-01 1.081511805079039545e-01 2.239835024348004189e-01
 1.315721561940036699e-01 1.040055590640546201e-01 2.213363669373892839e-01];
+
    case {'dem','top'} % dem or topo
       RGB = [1.561019746507273376e-01 1.026082525875711138e-01 1.727215696232307918e-01
 1.614878059346168959e-01 1.086331782717616379e-01 1.834416540200605461e-01
@@ -5916,6 +5969,7 @@ switch lower(cmapName(1:3))
 9.626518136622860267e-01 9.745638255706342568e-01 8.665671328953633568e-01
 9.686647318914142213e-01 9.839422330504176140e-01 8.807260550903986962e-01
 9.747892173640951841e-01 9.933519398287798952e-01 8.949228432580742520e-01];
+
    case 'dif' % diff
       RGB = [3.080165225110909760e-02 1.368487040065790861e-01 2.498464445599150041e-01
 3.427654989146505099e-02 1.437127028532935447e-01 2.573239494162229413e-01
@@ -6173,6 +6227,7 @@ switch lower(cmapName(1:3))
 1.252084444586500644e-01 1.460622428214301272e-01 3.362553317766520805e-02
 1.178384206042670801e-01 1.400089579293633535e-01 3.023931012520724576e-02
 1.104210154536264532e-01 1.339166670121798297e-01 2.703939689144004010e-02]; 
+
    case 'tar' % tarn, the rain anomaly map
       RGB = [8.982325470083904473e-02 1.386884202488073425e-01 5.339634747542102572e-02
 9.490477059882479471e-02 1.456373382629968793e-01 5.489581825948507826e-02
@@ -6434,7 +6489,11 @@ switch lower(cmapName(1:3))
    otherwise 
       error('Unrecognized colormap name.') 
      
+
 end
+
+
+
 function varargout = colorspace(Conversion,varargin)
 %COLORSPACE  Transform a color image between color representations.
 %   B = COLORSPACE(S,A) transforms the color representation of image A
@@ -6517,10 +6576,14 @@ function varargout = colorspace(Conversion,varargin)
 %  response of the three types of cones in the human eye, where L, M, S,
 %  correspond respectively to red ("long"), green ("medium"), and blue
 %  ("short").
+
 % Pascal Getreuer 2005-2010
+
+
 %%% Input parsing %%%
 if nargin < 2, error('Not enough input arguments.'); end
 [SrcSpace,DestSpace] = parse(Conversion);
+
 if nargin == 2
    Image = varargin{1};
 elseif nargin >= 3
@@ -6528,12 +6591,16 @@ elseif nargin >= 3
 else
    error('Invalid number of input arguments.');
 end
+
 FlipDims = (size(Image,3) == 1);
+
 if FlipDims, Image = permute(Image,[1,3,2]); end
 if ~isa(Image,'double'), Image = double(Image)/255; end
 if size(Image,3) ~= 3, error('Invalid input size.'); end
+
 SrcT = gettransform(SrcSpace);
 DestT = gettransform(DestSpace);
+
 if ~ischar(SrcT) && ~ischar(DestT)
    % Both source and destination transforms are affine, so they
    % can be composed into one affine operation
@@ -6553,6 +6620,7 @@ elseif ~ischar(DestT)
 else
    Image = feval(DestT,Image,SrcSpace);
 end
+
 %%% Output format %%%
 if nargout > 1
    varargout = {Image(:,:,1),Image(:,:,2),Image(:,:,3)};
@@ -6560,9 +6628,13 @@ else
    if FlipDims, Image = permute(Image,[1,3,2]); end
    varargout = {Image};
 end
+
 return;
+
+
 function [SrcSpace,DestSpace] = parse(Str)
 % Parse conversion argument
+
 if ischar(Str)
    Str = lower(strrep(strrep(Str,'-',''),'=',''));
    k = find(Str == '>');
@@ -6589,11 +6661,15 @@ else
    if any(size(Conversion) ~= 3), error('Transformation matrix must be 3x3.'); end
 end
 return;
+
+
 function Space = alias(Space)
 Space = strrep(strrep(Space,'cie',''),' ','');
+
 if isempty(Space)
    Space = 'rgb';
 end
+
 switch Space
 case {'ycbcr','ycc'}
    Space = 'ycbcr';
@@ -6605,6 +6681,8 @@ case {'rgb','yuv','yiq','ydbdr','ycbcr','jpegycbcr','xyz','lab','luv','lch'}
    return;
 end
 return;
+
+
 function T = gettransform(Space)
 % Get a colorspace transform: either a matrix describing an affine transform,
 % or a string referring to a conversion subroutine
@@ -6637,6 +6715,8 @@ otherwise
    error(['Unknown color space, ''',Space,'''.']);
 end
 return;
+
+
 function Image = rgb(Image,SrcSpace)
 % Convert to sRGB from 'SrcSpace'
 switch SrcSpace
@@ -6678,12 +6758,16 @@ otherwise  % Conversion is through an affine transform
    Image(:,:,2) = G;
    Image(:,:,3) = B;
 end
+
 % Clip to [0,1]
 Image = min(max(Image,0),1);
 return;
+
+
 function Image = xyz(Image,SrcSpace)
 % Convert to CIE XYZ from 'SrcSpace'
 WhitePoint = [0.950456,1,1.088754];  
+
 switch SrcSpace
 case 'xyz'
    return;
@@ -6731,6 +6815,8 @@ otherwise   % Convert from some gamma-corrected space
    Image(:,:,3) = T(3)*R + T(6)*G + T(9)*B;  % Z
 end
 return;
+
+
 function Image = hsv(Image,SrcSpace)
 % Convert to HSV
 Image = rgb(Image,SrcSpace);
@@ -6740,6 +6826,8 @@ Image(:,:,1) = rgbtohue(Image);
 Image(:,:,2) = S;
 Image(:,:,3) = V;
 return;
+
+
 function Image = hsl(Image,SrcSpace)
 % Convert to HSL 
 switch SrcSpace
@@ -6764,9 +6852,12 @@ otherwise
    Image(:,:,3) = L;
 end
 return;
+
+
 function Image = lab(Image,SrcSpace)
 % Convert to CIE L*a*b* (CIELAB)
 WhitePoint = [0.950456,1,1.088754];
+
 switch SrcSpace
 case 'lab'
    return;
@@ -6789,11 +6880,14 @@ otherwise
    Image(:,:,3) = 200*(fY - fZ);  % b*
 end
 return;
+
+
 function Image = luv(Image,SrcSpace)
 % Convert to CIE L*u*v* (CIELUV)
 WhitePoint = [0.950456,1,1.088754];
 WhitePointU = (4*WhitePoint(1))./(WhitePoint(1) + 15*WhitePoint(2) + 3*WhitePoint(3));
 WhitePointV = (9*WhitePoint(2))./(WhitePoint(1) + 15*WhitePoint(2) + 3*WhitePoint(3));
+
 Image = xyz(Image,SrcSpace); % Convert to XYZ
 Denom = Image(:,:,1) + 15*Image(:,:,2) + 3*Image(:,:,3);
 U = (4*Image(:,:,1))./(Denom + (Denom == 0));
@@ -6804,6 +6898,8 @@ Image(:,:,1) = L;                        % L*
 Image(:,:,2) = 13*L.*(U - WhitePointU);  % u*
 Image(:,:,3) = 13*L.*(V - WhitePointV);  % v*
 return;  
+
+
 function Image = lch(Image,SrcSpace)
 % Convert to CIE L*ch
 Image = lab(Image,SrcSpace);  % Convert to CIE L*ab
@@ -6812,6 +6908,8 @@ H = H*180/pi + 360*(H < 0);
 Image(:,:,2) = sqrt(Image(:,:,2).^2 + Image(:,:,3).^2);  % C
 Image(:,:,3) = H;                                        % H
 return;
+
+
 function Image = cat02lms(Image,SrcSpace)
 % Convert to CAT02 LMS
 Image = xyz(Image,SrcSpace);
@@ -6823,6 +6921,8 @@ Image(:,:,1) = T(1)*X + T(4)*Y + T(7)*Z;  % L
 Image(:,:,2) = T(2)*X + T(5)*Y + T(8)*Z;  % M
 Image(:,:,3) = T(3)*X + T(6)*Y + T(9)*Z;  % S
 return;
+
+
 function Image = huetorgb(m0,m2,H)
 % Convert HSV or HSL hue to RGB
 N = size(H);
@@ -6836,6 +6936,8 @@ j = [2 1 0;1 2 0;0 2 1;0 1 2;1 0 2;2 0 1;2 1 0]*Num;
 k = floor(H) + 1;
 Image = reshape([M(j(k,1)+(1:Num).'),M(j(k,2)+(1:Num).'),M(j(k,3)+(1:Num).')],[N,3]);
 return;
+
+
 function H = rgbtohue(Image)
 % Convert RGB to HSV or HSL hue
 [M,i] = sort(Image,3);
@@ -6855,23 +6957,31 @@ H(k) = 4 + (R(k) - G(k))./Delta(k);
 H = 60*H + 360*(H < 0);
 H(Delta == 0) = nan;
 return;
+
+
 function Rp = gammacorrection(R)
 Rp = zeros(size(R));
 i = (R <= 0.0031306684425005883);
 Rp(i) = 12.92*R(i);
 Rp(~i) = real(1.055*R(~i).^0.416666666666666667 - 0.055);
 return;
+
+
 function R = invgammacorrection(Rp)
 R = zeros(size(Rp));
 i = (Rp <= 0.0404482362771076);
 R(i) = Rp(i)/12.92;
 R(~i) = real(((Rp(~i) + 0.055)/1.055).^2.4);
 return;
+
+
 function fY = f(Y)
 fY = real(Y.^(1/3));
 i = (Y < 0.008856);
 fY(i) = Y(i)*(841/108) + (4/29);
 return;
+
+
 function Y = invf(fY)
 Y = fY.^3;
 i = (Y < 0.008856);
