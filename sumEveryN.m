@@ -11,7 +11,7 @@ id = find(~ismember([1 2], dim));
 
 for ii = 1:s(id)
     in_temp = input(:,ii);
-    output(:,ii) = reshape(sum(reshape(in_temp,N,[])),[],1);
+    output(:,ii) = reshape(sum(reshape(in_temp,N,[]),'omitnan'),[],1);
 end
 
 end
